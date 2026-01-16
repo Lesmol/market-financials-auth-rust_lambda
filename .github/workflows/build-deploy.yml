@@ -1,0 +1,19 @@
+name: Lambda Function
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Lambda Function
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: goto-bus-stop/setup-zig@v1
+        with:
+          version: 0.15.2
+      - uses: zerj9/setup-cargo-lambda@v0.1.1
+    
+      - name: Build Function
+        run: cargo lambda build --release
