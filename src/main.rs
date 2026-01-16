@@ -7,7 +7,6 @@ mod auth_response;
 
 use http_handler::function_handler;
 use log::info;
-use serde_json::json;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {

@@ -1,5 +1,5 @@
 [package]
-name = "market-financial-auth-rust_lambda"
+name = "market-financials-auth-rust_lambda"
 version = "0.1.0"
 edition = "2021"
 
