@@ -1,57 +1,49 @@
-# Introduction
+# 🛡️ Market Financials Auth Rust Lambda
 
-market-financial-auth-rust_lambda is a Rust project that implements an AWS Lambda function in Rust.
+This repository contains an AWS Lambda function implemented in Rust for API authentication. It validates API keys against a DynamoDB table to authorize requests. The function is built using Cargo Lambda and deployed via GitHub Actions.
 
-## Prerequisites
+## 📂 Repository Structure
 
-- [Rust](https://www.rust-lang.org/tools/install)
-- [Cargo Lambda](https://www.cargo-lambda.info/guide/installation.html)
+* **`src/main.rs`**: The entry point that initializes the DynamoDB client and starts the Lambda runtime.
+* **`src/http_handler.rs`**: Contains the core logic for extracting the API key and querying DynamoDB.
+* **`src/auth_response.rs`**: Defines the structure for the JSON authorization response.
+* **`.github/workflows/build-deploy.yml`**: CI/CD pipeline for building the Rust binary and deploying the Lambda function.
 
-## Building
+## 🏗️ Architecture & Logic
 
-To build the project for production, run `cargo lambda build --release`. Remove the `--release` flag to build for development.
+The Lambda function expects an HTTP event and specifically looks for an `x-api-key` header to validate authorization.
 
-Read more about building your lambda function in [the Cargo Lambda documentation](https://www.cargo-lambda.info/commands/build.html).
+1.  **📥 Input:** The handler extracts the `x-api-key` header from the incoming request.
+2.  **🔍 Validation:**
+    * It checks for the presence of the header.
+    * If present, it queries the DynamoDB table (defined by the `DYNAMODB_AUTH_TABLE_NAME` environment variable) to see if the key exists as a primary key (`ApiKey`).
+3.  **📤 Output:** Returns a JSON object indicating authorization status:
+    * `{ "isAuthorized": true }` if the key exists.
+    * `{ "isAuthorized": false }` if the key is missing or invalid.
 
-## Testing
+## 🚀 Deployment
 
-You can run regular Rust unit tests with `cargo test`.
+Deployment is handled automatically via GitHub Actions when changes are pushed to the `develop` branch.
 
-If you want to run integration tests locally, you can use the `cargo lambda watch` and `cargo lambda invoke` commands to do it.
+### 🔄 CI/CD Pipeline
+The workflow `build-deploy.yml` performs the following steps:
+1.  **Build**:
+    * Sets up the Rust toolchain and `cargo-lambda`.
+    * Compiles the function in release mode (`cargo lambda build --release`).
+    * Uploads the build artifact.
+2.  **Deploy**:
+    * Downloads the artifact.
+    * Deploys the function to AWS using `cargo lambda deploy`.
 
-First, run `cargo lambda watch` to start a local server. When you make changes to the code, the server will automatically restart.
+### ⚙️ Environment Configuration
+The deployment pipeline uses the following AWS configuration:
+* **🌍 Region:** `af-south-1`
+* **⚡ Lambda Function Name:** Configured via the `LAMBDA_FUNCTION_NAME` secret.
 
-Second, you'll need a way to pass the event data to the lambda function.
+## ✅ Requirements
 
-You can use the existent [event payloads](https://github.com/awslabs/aws-lambda-rust-runtime/tree/main/lambda-events/src/fixtures) in the Rust Runtime repository if your lambda function is using one of the supported event types.
+* **🔑 AWS Credentials**: The GitHub repository secrets must include `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` for deployment.
+* **📝 Environment Variables**: The Lambda function requires `DYNAMODB_AUTH_TABLE_NAME` to be set in the runtime environment.
 
-You can use those examples directly with the `--data-example` flag, where the value is the name of the file in the [lambda-events](https://github.com/awslabs/aws-lambda-rust-runtime/tree/main/lambda-events/src/fixtures) repository without the `example_` prefix and the `.json` extension.
-
-```bash
-cargo lambda invoke --data-example apigw-request
-```
-
-For generic events, where you define the event data structure, you can create a JSON file with the data you want to test with. For example:
-
-```json
-{
-    "command": "test"
-}
-```
-
-Then, run `cargo lambda invoke --data-file ./data.json` to invoke the function with the data in `data.json`.
-
-For HTTP events, you can also call the function directly with cURL or any other HTTP client. For example:
-
-```bash
-curl https://localhost:9000
-```
-
-Read more about running the local server in [the Cargo Lambda documentation for the `watch` command](https://www.cargo-lambda.info/commands/watch.html).
-Read more about invoking the function in [the Cargo Lambda documentation for the `invoke` command](https://www.cargo-lambda.info/commands/invoke.html).
-
-## Deploying
-
-To deploy the project, run `cargo lambda deploy`. This will create an IAM role and a Lambda function in your AWS account.
-
-Read more about deploying your lambda function in [the Cargo Lambda documentation](https://www.cargo-lambda.info/commands/deploy.html).
+## 🔨 Tools used:
+[![My Skills](https://skillicons.dev/icons?i=rust,aws,githubactions&perline=6)](https://skillicons.dev)
