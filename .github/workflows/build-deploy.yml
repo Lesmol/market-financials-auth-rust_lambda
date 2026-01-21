@@ -3,6 +3,9 @@ name: Lambda Function
 on:
   workflow_dispatch:
 
+env:
+  REGION: af-south-1
+
 jobs:
   build:
     name: Build Lambda Function
@@ -12,10 +15,43 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
-      - uses: goto-bus-stop/setup-zig@v1
-        with:
-          version: 0.15.2
       - uses: zerj9/setup-cargo-lambda@v0.1.1
     
       - name: Build Function
         run: cargo lambda build --release
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: lambda-build
+          path: target/lambda/
+
+  deploy:
+    name: Deploy Lambda Function
+    runs-on: ubuntu-latest
+    needs: build
+    environment: production
+    
+    steps:
+      - uses: actions/checkout@v6
+      - uses: zerj9/setup-cargo-lambda@v0.1.2
+      - uses: zerj9/setup-cargo-lambda@v0.1.1
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.REGION }}
+
+      - name: Download Artifact
+        uses: actions/download-artifact@v7
+        with:
+          name: lambda-build
+          path: target/lambda/
+
+      - name: Deploy Function
+        run: |
+          cargo lambda deploy \
+          --function-name ${{ secrets.LAMBDA_FUNCTION_NAME }} \
+          --region ${{ env.REGION }}
